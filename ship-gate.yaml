@@ -1,4 +1,4 @@
-description: 'Ship gate - test-model-v2'
+description: 'Ship gate - test-model-v2 (strong prompt run)'
 
 prompts:
   - '{{user_input}}'
