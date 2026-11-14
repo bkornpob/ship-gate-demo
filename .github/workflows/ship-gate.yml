@@ -1,0 +1,22 @@
+name: ship-gate
+on:
+  pull_request:
+    paths: ['Modelfile2', 'ship-gate.yaml']
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Ollama and bake the model
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          curl -sf http://localhost:11434/api/tags || (nohup ollama serve > ollama.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags && break; sleep 2; done
+          ollama pull llama3.2:3b
+          ollama create test-model-v2 -f Modelfile2
+      - run: npm install -g promptfoo
+      - run: promptfoo eval -c ship-gate.yaml --repeat 3 --no-cache -j 1
