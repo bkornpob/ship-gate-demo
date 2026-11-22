@@ -1,0 +1,22 @@
+name: guard-gate
+on:
+  pull_request:
+    paths: ['Modelfile', 'guard.env', 'guard/**']
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ollama and bake the model
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          curl -sf http://localhost:11434/api/tags || (nohup ollama serve > ollama.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://localhost:11434/api/tags && break; sleep 2; done
+          ollama pull llama3.2:3b
+          ollama create test-model -f Modelfile
+      - name: Pull the guard and judge models
+        run: |
+          set -a; . ./guard.env; set +a
+          for m in ${GUARD_MODEL//,/ } "$JUDGE_MODEL"; do ollama pull "$m"; done
+      - run: bash guard-ship.sh
