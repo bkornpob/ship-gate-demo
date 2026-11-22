@@ -2,7 +2,8 @@
 # CI gate: replay the probes through the guarded pipeline, then fail on leaks or false positives.
 # Usage: bash guard-ship.sh [guard.env]      (exit 1 = leak, 4 = false positive, 3 = broken audit trail)
 set -e
-set -a; . "${1:-guard.env}"; set +a        # MODEL GUARD_IN GUARD_OUT GUARD_MODEL JUDGE_MODEL ROUNDS
+set -a; . "${1:-guard.env}"; set +a        # MODEL GUARD_IN GUARD_OUT GUARD_MODEL JUDGE_MODEL
+export ROUNDS="${ROUNDS:-3}"               # times each probe is replayed; override: ROUNDS=1 bash guard-ship.sh guard.fail.env
 cd guard
 rm -f ci.jsonl
 AUDIT_LOG=ci.jsonl CHAT=guarded_chat.py bash replay.sh probes.tsv
